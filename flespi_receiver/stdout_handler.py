@@ -1,7 +1,14 @@
 # -*- coding: utf-8 -*-
 import asyncio
+from .handler_class import handler_class
 
-async def write_to_stdout(msgs_bunch, params) -> bool:
-    """ file handler to append the received messages bunch to a file """
-    print(params, '\n', msgs_bunch)
-    return True
+
+class stdout_handler_class(handler_class):
+
+    def __init__(self, config):
+        # assert that config is a dict
+        self.config = config
+
+    async def run_handler(self, msgs_bunch) -> bool:
+        print(self.config, '\n', msgs_bunch)
+        return True

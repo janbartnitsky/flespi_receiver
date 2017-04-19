@@ -16,8 +16,13 @@ class AdvancedTestSuite(unittest.TestCase):
     def test_read_from_flespi(self):
         receiver = flespi_receiver.flespi_receiver()
         receiver.configure(channel_id, api_key, timeout, delete_flag)
-        receiver.add_handler(flespi_receiver.write_to_stdout, {'stdout': 1})
-        receiver.add_handler(flespi_receiver.write_to_stdout, {'stdout': 2})
+
+        stdout_handler1 = flespi_receiver.stdout_handler_class({"stdout": "1"})
+        receiver.add_handler(stdout_handler1)
+
+        stdout_handler2 = flespi_receiver.stdout_handler_class({"stdout": "2"})
+        receiver.add_handler(stdout_handler2)
+
         receiver.start()
 
 

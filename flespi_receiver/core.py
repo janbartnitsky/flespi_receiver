@@ -2,10 +2,10 @@
 import asyncio
 import functools
 import json
-from inspect import signature, iscoroutinefunction
-import swagger_client
-from swagger_client.rest import ApiException
-from swagger_client.apis import messages_api
+import urllib3
+
+from .swagger_api_reduced import get_messages_request, ApiException
+from .handler_class import handler_class
 
 
 async def get_msgs_from_channel(future, flespi_recv_obj):
@@ -16,13 +16,11 @@ async def get_msgs_from_channel(future, flespi_recv_obj):
     # create request parameters dict and stringify it in json style
     request_data = {'curr_key': flespi_recv_obj.curr_key,
                     'timeout': flespi_recv_obj.timeout, 'delete': flespi_recv_obj.delete_flag}
-    json_data = json.dumps(request_data)
+    json_data = {'data': json.dumps(request_data)}
 
-    # peparation done: use swagger client to send request
+    # peparation done: use swagger client get messages request to receive data
     try:
-        flespi_recv_obj.api_instance = swagger_client.MessagesApi()
-        result = flespi_recv_obj.api_instance.channels_ch_selector_messages_get(
-            CH_SELECTOR, data=json_data)
+        result = get_messages_request(flespi_recv_obj, json_data)
     except ApiException as e:
         print("Exception calling MessagesApi->channels_ch_selector_messages_get: %s\n" % e)
         future.cancel()
@@ -53,14 +51,16 @@ def rest_response_callback(function, flespi_recv_obj, future):
     if future.cancelled():
         return
     try:
-        response = future.result().to_dict()
+        response = future.result()
     # in case of any error - stop the event loop
     except ApiException as e:
         print("Exception when calling restapi call to flespi.io: %s\n" % e)
         flespi_recv_obj.event_loop.stop()
 
+    response = json.loads(response.data)
+
     # update cur_key for the next request
-    if response['next_key'] != None:
+    if 'next_key' in response:
         flespi_recv_obj.curr_key = response['next_key']
 
     # create future for run callbacks
@@ -73,7 +73,7 @@ def rest_response_callback(function, flespi_recv_obj, future):
 async def run_callbacks_for_messages(future, flespi_recv_obj, messages_tuple):
     """ Async method to create future waiting for multiple coroutines"""
     all_handlers = [
-        handler['function'](messages_tuple, handler['parameters'])
+        handler.run_handler(messages_tuple)
         for handler in flespi_recv_obj.handlers
     ]
     print('waiting for all_handlers to complete')
@@ -89,7 +89,7 @@ class flespi_receiver(object):
 
     def __init__(self):
         """Initiate swagger api messages client"""
-        self.api_instance = swagger_client.MessagesApi()
+        self.pool_manager = urllib3.PoolManager()
         # create event loop
         self.event_loop = asyncio.get_event_loop()
         # initiate channel id field
@@ -107,26 +107,22 @@ class flespi_receiver(object):
     def configure(self, ch_id, api_key, timeout, delete_flag):
         """Store source receiver configuration parameters and auth token"""
         self.channel_id = ch_id
+        #self.target_url = 'https://flespi.io/gw/channels/' + str(ch_id) + '/messages'
+        self.target_url = 'localhost:9004/gw/channels/' + \
+            str(ch_id) + '/messages'
         self.timeout = timeout
         self.delete_flag = delete_flag
-
-        # set up swagger api client authorization
-        swagger_client.configuration.api_key[
-            'Authorization'] = 'FlespiToken ' + api_key
+        self.auth_header = 'FlespiToken ' + api_key
 
         print('flespi_receiver instance configured')
 
-    def add_handler(self, func, params):
+    def add_handler(self, handler_inst):
         """Add handler: pair of workout function and configurational params dict"""
         # validate handler:
-        if (signature(func).return_annotation.__name__ == 'bool'  # returns bool
-                # has 2 input parameters: msgs_bunch and params
-                and list((signature(func).parameters).keys()) == ['msgs_bunch', 'params']
-                and iscoroutinefunction(func)):  # must be callable as coroutine
-            # store handler (with params) adopting conditions
-            handler_inst = dict(function=func, parameters=params)
+        if (isinstance(handler_inst, handler_class)):
+            # store handler adopting conditions
             self.handlers.append(handler_inst)
-            print('handler added', func)
+            print('handler added', handler_inst)
         else:
             print('Invalid handler ', func)
             print('handler has to return bool, have 2 input parameters (\'msgs_bunch\', \'params\') and have to be called as coroutine')

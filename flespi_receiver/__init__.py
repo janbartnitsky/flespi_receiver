@@ -1,2 +1,2 @@
 from .core import flespi_receiver
-from .stdout_handler import write_to_stdout
+from .stdout_handler import stdout_handler_class
