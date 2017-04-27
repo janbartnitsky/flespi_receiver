@@ -79,7 +79,7 @@ async def run_callbacks_for_messages(future, flespi_recv_obj, messages_tuple):
     print('waiting for all_handlers to complete')
     completed, pending = await asyncio.wait(all_handlers)
     results = [t.result() for t in completed]
-    print('results: {!r}'.format(results))
+    print('results: {!r}'.format(results)) # TODO: handle the callback results
 
     future.set_result(True)
 
