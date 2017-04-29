@@ -57,11 +57,17 @@ def rest_response_callback(function, flespi_recv_obj, future):
         print("Exception when calling restapi call to flespi.io: %s\n" % e)
         flespi_recv_obj.event_loop.stop()
 
+    # parse received response from server
     response = json.loads(response.data)
 
     # update cur_key for the next request
     if 'next_key' in response:
         flespi_recv_obj.curr_key = response['next_key']
+    # check for errors in response if something went wrong
+    if 'errors' in response:
+        print("Exception when calling restapi call to flespi.io: %s\n" %
+              response['errors'])
+        flespi_recv_obj.event_loop.stop()
 
     # create future for run callbacks
     all_handlers_done = asyncio.Future()
@@ -76,10 +82,14 @@ async def run_callbacks_for_messages(future, flespi_recv_obj, messages_tuple):
         handler.run_handler(messages_tuple)
         for handler in flespi_recv_obj.handlers
     ]
-    print('waiting for all_handlers to complete')
     completed, pending = await asyncio.wait(all_handlers)
     results = [t.result() for t in completed]
-    print('results: {!r}'.format(results)) # TODO: handle the callback results
+    if False in results:
+        for i, res in enumerate(results):
+            if res == False:
+                print('pricessing failed on handler', all_handlers[i])
+                print('curr_key=%d' % flespi_recv_obj.curr_key)
+        flespi_recv_obj.event_loop.stop()
 
     future.set_result(True)
 
@@ -104,14 +114,14 @@ class flespi_receiver(object):
         self.delete_flag = False
         print('New flespi_receiver instance created')
 
-    def configure(self, ch_id, api_key, timeout, delete_flag):
+    def configure(self, ch_id, api_key, timeout=10, delete_flag=False, start_key=0):
         """Store source receiver configuration parameters and auth token"""
         self.channel_id = ch_id
-        #self.target_url = 'https://flespi.io/gw/channels/' + str(ch_id) + '/messages'
-        self.target_url = 'localhost:9004/gw/channels/' + \
+        self.target_url = 'https://flespi.io/gw/channels/' + \
             str(ch_id) + '/messages'
         self.timeout = timeout
         self.delete_flag = delete_flag
+        self.cur_key = start_key
         self.auth_header = 'FlespiToken ' + api_key
 
         print('flespi_receiver instance configured')
@@ -124,8 +134,7 @@ class flespi_receiver(object):
             self.handlers.append(handler_inst)
             print('handler added', handler_inst)
         else:
-            print('Invalid handler ', func)
-            print('handler has to return bool, have 2 input parameters (\'msgs_bunch\', \'params\') and have to be called as coroutine')
+            print('Invalid handler ', handler_inst)
 
     def start(self):
         """Start event loop of flespi receiver"""

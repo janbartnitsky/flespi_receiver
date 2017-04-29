@@ -4,15 +4,20 @@ from abc import ABCMeta, abstractmethod
 
 
 class handler_class(metaclass=ABCMeta):
-	"""handler_class: consists of single handler method to workout messages"""
-	config = {}
+    """handler_class: consists of single handler method to workout messages"""
 
-	@abstractmethod
-	def __init__(self, config):
-		"""Initiate handler instance"""
-		pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-	@abstractmethod
-	async def run_handler(self, msgs_bunch) -> bool:
-		""" file handler to append the received messages bunch to a file """
-		pass
+    async def run_handler(self, msgs_bunch) -> bool:
+        """ handler to workout the received messages """
+        try:
+            handler_ret = self._workout_messages(msgs_bunch)
+        except:
+            return False
+
+        return handler_ret
+
+    @abstractmethod
+    def _workout_messages(self, msgs_bunch) -> bool:
+        raise NotImplementedError

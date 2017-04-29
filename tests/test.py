@@ -17,11 +17,11 @@ class AdvancedTestSuite(unittest.TestCase):
         receiver = flespi_receiver.flespi_receiver()
         receiver.configure(channel_id, api_key, timeout, delete_flag)
 
-        stdout_handler1 = flespi_receiver.stdout_handler_class({"stdout": "1"})
+        stdout_handler1 = flespi_receiver.stdout_handler_class(stdout=1)
         receiver.add_handler(stdout_handler1)
 
         wialon_handler = flespi_receiver.wialon_retranslator_handler_class(
-            {'host': 'localhost', 'port': 12374})  # specify listening host:port
+            host='localhost', port=12374)  # specify listening host:port
         receiver.add_handler(wialon_handler)
 
         receiver.start()

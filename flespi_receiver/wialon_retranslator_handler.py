@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-import asyncio
-from math import floor
 from .handler_class import handler_class
+from math import floor
 import struct
 import io
 import socket
@@ -21,7 +20,7 @@ def enc_msgs_to_wialon_retr_fmt(msgs_bunch):
         chunks_list.append(head_chunk)
         single_msg_size = len(head_chunk)
         for param_key, param_value in msg.items():
-            if param_key == ("ident" or "timestamp"):
+            if param_key in ["ident", "timestamp"]:
                 continue  # these values have been already added in block head
             # init blocksize: 1(hidden_flag)+1(type)+len(param_key)+1(endline)
             block_size_init = 3 + len(param_key)
@@ -66,19 +65,20 @@ def enc_msgs_to_wialon_retr_fmt(msgs_bunch):
 
 class wialon_retranslator_handler_class(handler_class):
 
-    def __init__(self, config):
+    def __init__(self, *args, **kwargs):
         """ assert that config is a dict with host and port fields """
-        if 'host' not in config or 'port' not in config:
+        if 'host' not in kwargs or 'port' not in kwargs:
             print('wialon retranslator handler must have host and port in config dict')
-            return
+            raise ValueError
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # establish TCP connection to host port from config
-        self.sock.connect((config['host'], config['port']))
+        self.sock.connect((kwargs['host'], kwargs['port']))
 
     def __del__(self):
-        self.sock.close()
+        if 'sock' in self.__dict__:
+            self.sock.close()
 
-    async def run_handler(self, msgs_bunch) -> bool:
+    def _workout_messages(self, msgs_bunch):
         """ encode every message with wialon_retranslator protocol """
         encoded_buffer = enc_msgs_to_wialon_retr_fmt(msgs_bunch)
         # print(binascii.hexlify(bytearray(encoded_buffer)))
