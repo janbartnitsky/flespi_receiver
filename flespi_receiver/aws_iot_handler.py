@@ -2,7 +2,7 @@
 from .handler_class import handler_class
 # A copy of the License is located at http://aws.amazon.com/apache2.0
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
-
+import json
 
 class aws_iot_handler_class(handler_class):
 
@@ -38,7 +38,8 @@ class aws_iot_handler_class(handler_class):
         """ retranslate every message to Amazon AWS IoT platform """
         ret = True
         for msg in msgs_bunch:
-            ret = self.aws_iot_mqtt_client.publish(msg["ident"], str(msg), 1)
+            ret = self.aws_iot_mqtt_client.publish(msg["ident"], json.dumps(msg), 1)
             if ret == False:
                 break
         return ret
+
