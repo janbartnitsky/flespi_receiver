@@ -66,9 +66,9 @@ def enc_msgs_to_wialon_retr_fmt(msgs_bunch):
 class wialon_retranslator_handler_class(handler_class):
 
     def __init__(self, *args, **kwargs):
-        """ assert that config is a dict with host and port fields """
+        """ assert that host and port fields are in kwargs """
         if 'host' not in kwargs or 'port' not in kwargs:
-            print('wialon retranslator handler must have host and port in config dict')
+            print('wialon retranslator handler must have host and port in init arguments')
             raise ValueError
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # establish TCP connection to host port from config
