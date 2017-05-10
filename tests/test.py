@@ -8,6 +8,7 @@ api_key = 'your_api_key'
 channel_id = 0
 timeout = 10
 delete_flag = True
+start_key = 0
 
 
 class AdvancedTestSuite(unittest.TestCase):
@@ -23,6 +24,14 @@ class AdvancedTestSuite(unittest.TestCase):
         wialon_handler = flespi_receiver.wialon_retranslator_handler_class(
             host='localhost', port=12374)  # specify listening host:port
         receiver.add_handler(wialon_handler)
+
+        certdir = '/home/baja/Downloads/aws/'
+        aws_handler = flespi_receiver.aws_iot_handler_class(
+            root_ca_path= certdir + "root-CA.crt",
+            private_key_path= certdir + "test_thing.private.key",
+            certificate_path= certdir + "test_thing.cert.pem",
+            endpoint = "ajmu1akwku30p.iot.eu-west-1.amazonaws.com")
+        receiver.add_handler(aws_handler)
 
         receiver.start()
 
