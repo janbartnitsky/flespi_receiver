@@ -18,3 +18,9 @@ build:
 
 test:
 	env/bin/python3.5 tests/test.py
+
+test-aws:
+	env/bin/python3.5 tests/test_aws.py
+
+test-azure:
+	env/bin/python3.5 tests/test_azure.py

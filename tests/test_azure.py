@@ -17,16 +17,17 @@ class AdvancedTestSuite(unittest.TestCase):
     def test_read_from_flespi(self):
         receiver = flespi_receiver.flespi_receiver()
         receiver.configure(channel_id, api_key, timeout, delete_flag)
+
         receiver.target_url = "http://localhost:9004/gw/channels/" + \
             str(channel_id) + '/messages'
         print(receiver.target_url)
 
-        stdout_handler1 = flespi_receiver.stdout_handler_class(stdout=1)
-        receiver.add_handler(stdout_handler1)
-
-        #wialon_handler = flespi_receiver.wialon_retranslator_handler_class(
-        #    host='localhost', port=12374)  # specify listening host:port
-        #receiver.add_handler(wialon_handler)
+        azure_handler = flespi_receiver.azure_iot_handler_class(
+            host_name = 'flespi-test6f927.azure-devices.net',
+            shared_access_key_name = 'iothubowner',
+            shared_acccess_key = 'sysvGUbu1xUhU5onhftKC+uD3CIBK+gRMLBKumBR+T8=',
+            idents_dict_file = "idents.pkl")
+        receiver.add_handler(azure_handler)
 
         receiver.start()
 
