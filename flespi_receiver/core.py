@@ -121,7 +121,7 @@ class flespi_receiver(object):
             str(ch_id) + '/messages'
         self.timeout = timeout
         self.delete_flag = delete_flag
-        self.cur_key = start_key
+        self.curr_key = start_key
         self.auth_header = 'FlespiToken ' + api_key
 
         print('flespi_receiver instance configured')

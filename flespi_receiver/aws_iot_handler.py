@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from .handler_class import handler_class
 # A copy of the License is located at http://aws.amazon.com/apache2.0
-from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
+try:
+    from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
+except ImportError:
+    print("Failed to import AWSIoTPythonSDK. AWS IoT module can't be used ")
 import json
 
 class aws_iot_handler_class(handler_class):
