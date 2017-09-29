@@ -1,5 +1,6 @@
 init:
 	virtualenv -p python3.5 env
+	env/bin/pip install -U setuptools
 	env/bin/pip install -r requirements.txt
 
 clean-pyc:
