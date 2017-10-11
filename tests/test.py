@@ -9,14 +9,15 @@ channel_id = 0
 timeout = 10
 delete_flag = True
 start_key = 0
-
+limit_size = 256 * 1024
+limit_count = 1000
 
 class AdvancedTestSuite(unittest.TestCase):
     """Advanced test cases."""
 
     def test_read_from_flespi(self):
         receiver = flespi_receiver.flespi_receiver()
-        receiver.configure(channel_id, api_key, timeout, delete_flag, start_key)
+        receiver.configure(channel_id, api_key, timeout, delete_flag, start_key, limit_size, limit_count)
 
         stdout_handler1 = flespi_receiver.stdout_handler_class(stdout=1)
         receiver.add_handler(stdout_handler1)
@@ -34,9 +35,8 @@ class AdvancedTestSuite(unittest.TestCase):
         #receiver.add_handler(aws_handler)
 
         # handler will make POST request to flespi IO storage/abque for every messages bunch from channel
-        http_handler = flespi_receiver.http_handler_class(url = 'https://flespi.io/storage/abques/names=test_python_http_handler/messages',
+        http_handler = flespi_receiver.http_handler_class(url = 'https://flespi.io/storage/abques/name=test_python_http_handler/messages',
             headers = {'Authorization': 'FlespiToken your_api_key'})
-
         receiver.add_handler(http_handler)
 
         receiver.start()

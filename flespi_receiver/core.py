@@ -15,7 +15,10 @@ async def get_msgs_from_channel(future, flespi_recv_obj):
 
     # create request parameters dict and stringify it in json style
     request_data = {'curr_key': flespi_recv_obj.curr_key,
-                    'timeout': flespi_recv_obj.timeout, 'delete': flespi_recv_obj.delete_flag}
+                    'timeout': flespi_recv_obj.timeout,
+                    'delete': flespi_recv_obj.delete_flag,
+                    'limit_count': flespi_recv_obj.limit_count,
+                    'limit_size': flespi_recv_obj.limit_size}
     json_data = {'data': json.dumps(request_data)}
 
     # peparation done: use swagger client get messages request to receive data
@@ -112,9 +115,12 @@ class flespi_receiver(object):
         self.timeout = 5
         # specify if receiver have to delete read messages
         self.delete_flag = False
+        # specify limits for request GET /messages
+        self.limit_size = 8388608 # 8 MB
+        self.limit_count = 1000
         print('New flespi_receiver instance created')
 
-    def configure(self, ch_id, api_key, timeout=10, delete_flag=False, start_key=0):
+    def configure(self, ch_id, api_key, timeout=10, delete_flag=False, start_key=0, limit_size=8388608, limit_count=1000):
         """Store source receiver configuration parameters and auth token"""
         self.channel_id = ch_id
         self.target_url = 'https://flespi.io/gw/channels/' + \
@@ -123,6 +129,8 @@ class flespi_receiver(object):
         self.delete_flag = delete_flag
         self.curr_key = start_key
         self.auth_header = 'FlespiToken ' + api_key
+        self.limit_size = limit_size
+        self.limit_count = limit_count
 
         print('flespi_receiver instance configured')
 
