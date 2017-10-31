@@ -3,6 +3,7 @@ import asyncio
 import functools
 import json
 import urllib3
+import time
 
 from .swagger_api_reduced import get_messages_request, ApiException
 from .handler_class import handler_class
@@ -22,12 +23,14 @@ async def get_msgs_from_channel(future, flespi_recv_obj):
     json_data = {'data': json.dumps(request_data)}
 
     # peparation done: use swagger client get messages request to receive data
-    try:
-        result = get_messages_request(flespi_recv_obj, json_data)
-    except ApiException as e:
-        print("Exception calling MessagesApi->channels_ch_selector_messages_get: %s\n" % e)
-        future.cancel()
-        return
+    while True:
+        try:
+            result = get_messages_request(flespi_recv_obj, json_data)
+        except ApiException as e:
+            print("Exception calling MessagesApi->channels_ch_selector_messages_get: %s\n" % e)
+            time.sleep(flespi_recv_obj.flespi_unavailable_timeout)
+            continue
+        break
     future.set_result(result)
 
 
@@ -118,9 +121,11 @@ class flespi_receiver(object):
         # specify limits for request GET /messages
         self.limit_size = 8388608 # 8 MB
         self.limit_count = 1000
+        # set timeout to try again if flespi responded with not 200 code
+        self.flespi_unavailable_timeout = 15
         print('New flespi_receiver instance created')
 
-    def configure(self, ch_id, api_key, timeout=10, delete_flag=False, start_key=0, limit_size=8388608, limit_count=1000):
+    def configure(self, ch_id, api_key, timeout=10, delete_flag=False, start_key=0, limit_size=8388608, limit_count=1000, flespi_unavailable_timeout=15):
         """Store source receiver configuration parameters and auth token"""
         self.channel_id = ch_id
         self.target_url = 'https://flespi.io/gw/channels/' + \
@@ -131,6 +136,7 @@ class flespi_receiver(object):
         self.auth_header = 'FlespiToken ' + api_key
         self.limit_size = limit_size
         self.limit_count = limit_count
+        self.flespi_unavailable_timeout = flespi_unavailable_timeout
 
         print('flespi_receiver instance configured')
 
