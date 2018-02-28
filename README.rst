@@ -70,11 +70,14 @@ Concept:
     
 Available handlers:
 
-| Name          | Used for      | Required parameters |
-| ------------- | ------------- | ------------------- |
-| stdout | print received messages to the console | - |
-| wialon | send received messages to specified IP:port using wialon retranslator protocol | host, port |
-| aws_iot | send received messages to Amazon AWS IoT hub | root_ca_path, private_key_path, certificate_path, endpoint |
-| http | send POST http request to specified URL with specified headers with messages list as a HTTP data parameter | URL |
-
-
++-------+------------------------------------------------------------------------------------------------------------+------------------------------------------------------------+
+| Name  | Used for                                                                                                   | Required parameters                                        |
++=======+============================================================================================================+============================================================+
+| stdout|print received messages to the console                                                                      | --                                                         |
++-------+------------------------------------------------------------------------------------------------------------+------------------------------------------------------------+
+| wialon| send received messages to specified IP:port using wialon retranslator protocol                             | host, port                                                 |
++-------+------------------------------------------------------------------------------------------------------------+------------------------------------------------------------+
+|aws_iot| send received messages to Amazon AWS IoT hub                                                               | root_ca_path, private_key_path, certificate_path, endpoint |
++-------+------------------------------------------------------------------------------------------------------------+------------------------------------------------------------+
+| http  | send POST http request to specified URL with specified headers with messages list as a HTTP data parameter | URL                                                        |
++-------+------------------------------------------------------------------------------------------------------------+------------------------------------------------------------+
